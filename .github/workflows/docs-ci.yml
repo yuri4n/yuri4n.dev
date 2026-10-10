@@ -17,6 +17,12 @@ on:
       working-directory:
         type: string
         default: docs
+      # Where pnpm install runs: the folder with package.json (packageManager)
+      # and pnpm-lock.yaml. Empty: working-directory. The library passes '.'
+      # for playground-docs, a member of its root workspace.
+      install-directory:
+        type: string
+        default: ''
       node-version:
         type: string
         default: '24'
@@ -49,8 +55,13 @@ on:
       assistant-check:
         type: boolean
         default: true
+      # A hung build stops here, not after 6 hours. A Docus server build
+      # takes about 10 minutes.
+      timeout-minutes:
+        type: number
+        default: 45
     secrets:
-      # Read-only PAT (Contents read on yuri4n.dev), only for a private library.
+      # Optional. A read-only PAT (Contents read), only for a private library.
       SUBMODULES_TOKEN:
         required: false
 
@@ -60,6 +71,7 @@ permissions:
 jobs:
   site:
     runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.timeout-minutes }}
     defaults:
       run:
         working-directory: ${{ inputs.working-directory }}
@@ -76,13 +88,17 @@ jobs:
         env:
           LIBRARY_PATH: ${{ inputs.library-path }}
         # The gitlink (mode 160000) is the library commit that the app pins.
+        # The sha is assigned on its own line, so a failed rev-parse stops the
+        # step (bash -e) instead of writing a bad value.
         run: |
-          mode="$(git ls-files -s -- "$LIBRARY_PATH" | awk 'NR == 1 { print $1 }')"
+          path="${LIBRARY_PATH%/}"
+          mode="$(git ls-files -s -- "$path" | awk 'NR == 1 { print $1 }')"
           if [ "$mode" != 160000 ]; then
-            echo "::error::$LIBRARY_PATH is not a git submodule: run pnpm init:app, see README"
+            echo "::error::$path is not a git submodule: run pnpm init:app, see README"
             exit 1
           fi
-          echo "sha=$(git rev-parse "HEAD:$LIBRARY_PATH")" >> "$GITHUB_OUTPUT"
+          sha="$(git rev-parse --verify "HEAD:$path")"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
       - name: Check out the library
         if: inputs.library-path != ''
         uses: actions/checkout@v7
@@ -95,13 +111,15 @@ jobs:
           persist-credentials: false
       - uses: pnpm/action-setup@v6
         with:
-          package_json_file: ${{ inputs.working-directory }}/package.json
+          package_json_file: ${{ inputs.install-directory || inputs.working-directory }}/package.json
       - uses: actions/setup-node@v7
         with:
           node-version: ${{ inputs.node-version }}
           cache: pnpm
-          cache-dependency-path: ${{ inputs.working-directory }}/pnpm-lock.yaml
-      - run: pnpm install --frozen-lockfile
+          cache-dependency-path: ${{ inputs.install-directory || inputs.working-directory }}/pnpm-lock.yaml
+      - name: Install
+        working-directory: ${{ inputs.install-directory || inputs.working-directory }}
+        run: pnpm install --frozen-lockfile
       - name: Test
         if: inputs.run-tests
         run: pnpm test

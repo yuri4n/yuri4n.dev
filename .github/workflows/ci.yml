@@ -1,5 +1,9 @@
-# Library CI: the root scripts lint, type-check, test and build both
-# playgrounds and the ESLint package. It never deploys.
+# Library CI. It never deploys.
+# - ci: the root scripts lint, type-check (ESLint package and both
+#   playgrounds), test, and build the app playground.
+# - docs: the reusable docs-ci.yml on playground-docs. It builds with a dummy
+#   VERCEL_OIDC_TOKEN and fails when the Docus assistant is on, so a Docus
+#   update (a Renovate PR) must pass the assistant check here.
 name: CI
 
 on:
@@ -19,3 +23,12 @@ concurrency:
 jobs:
   ci:
     uses: ./.github/workflows/nuxt-ci.yml
+    with:
+      # The docs job builds playground-docs.
+      build-command: pnpm --filter ./playground run build
+
+  docs:
+    uses: ./.github/workflows/docs-ci.yml
+    with:
+      working-directory: playground-docs
+      install-directory: .

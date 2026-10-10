@@ -4,10 +4,11 @@
 # Call it with a tag, never with @main:
 #   uses: yuri4n/yuri4n.dev/.github/workflows/nuxt-ci.yml@v0.1.0
 #
-# Checkout of a private library: actions/checkout uses one token for all that
-# it fetches, so the app is checked out with github.token and the library in a
-# second step, at the commit of the app's gitlink, with SUBMODULES_TOKEN. Only
-# the library checkout sees the PAT. The .gitmodules URL plays no role here.
+# Checkout: the app with github.token, then the library in a second step, at
+# the commit of the app's gitlink. The library is public, so github.token can
+# read it. SUBMODULES_TOKEN is optional: only a private copy of the library
+# needs it, and then only the library checkout sees it. The .gitmodules URL
+# plays no role here.
 name: Nuxt CI
 
 on:
@@ -49,8 +50,12 @@ on:
       e2e:
         type: boolean
         default: false
+      # Per job. A hung build or browser test stops here, not after 6 hours.
+      timeout-minutes:
+        type: number
+        default: 30
     secrets:
-      # Read-only PAT (Contents read on yuri4n.dev), only for a private library.
+      # Optional. A read-only PAT (Contents read), only for a private library.
       SUBMODULES_TOKEN:
         required: false
 
@@ -60,6 +65,7 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.timeout-minutes }}
     defaults:
       run:
         working-directory: ${{ inputs.working-directory }}
@@ -76,13 +82,17 @@ jobs:
         env:
           LIBRARY_PATH: ${{ inputs.library-path }}
         # The gitlink (mode 160000) is the library commit that the app pins.
+        # The sha is assigned on its own line, so a failed rev-parse stops the
+        # step (bash -e) instead of writing a bad value.
         run: |
-          mode="$(git ls-files -s -- "$LIBRARY_PATH" | awk 'NR == 1 { print $1 }')"
+          path="${LIBRARY_PATH%/}"
+          mode="$(git ls-files -s -- "$path" | awk 'NR == 1 { print $1 }')"
           if [ "$mode" != 160000 ]; then
-            echo "::error::$LIBRARY_PATH is not a git submodule: run pnpm init:app, see README"
+            echo "::error::$path is not a git submodule: run pnpm init:app, see README"
             exit 1
           fi
-          echo "sha=$(git rev-parse "HEAD:$LIBRARY_PATH")" >> "$GITHUB_OUTPUT"
+          sha="$(git rev-parse --verify "HEAD:$path")"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
       - name: Check out the library
         if: inputs.library-path != ''
         uses: actions/checkout@v7
@@ -124,6 +134,7 @@ jobs:
     if: inputs.e2e
     needs: check
     runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.timeout-minutes }}
     defaults:
       run:
         working-directory: ${{ inputs.working-directory }}
@@ -138,13 +149,17 @@ jobs:
         working-directory: .
         env:
           LIBRARY_PATH: ${{ inputs.library-path }}
+        # The sha is assigned on its own line, so a failed rev-parse stops the
+        # step (bash -e) instead of writing a bad value.
         run: |
-          mode="$(git ls-files -s -- "$LIBRARY_PATH" | awk 'NR == 1 { print $1 }')"
+          path="${LIBRARY_PATH%/}"
+          mode="$(git ls-files -s -- "$path" | awk 'NR == 1 { print $1 }')"
           if [ "$mode" != 160000 ]; then
-            echo "::error::$LIBRARY_PATH is not a git submodule: run pnpm init:app, see README"
+            echo "::error::$path is not a git submodule: run pnpm init:app, see README"
             exit 1
           fi
-          echo "sha=$(git rev-parse "HEAD:$LIBRARY_PATH")" >> "$GITHUB_OUTPUT"
+          sha="$(git rev-parse --verify "HEAD:$path")"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
       - name: Check out the library
         if: inputs.library-path != ''
         uses: actions/checkout@v7
@@ -167,10 +182,14 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
       - name: End-to-end tests
         run: pnpm run test:e2e
-      - name: Upload the Playwright report
+      # The app's playwright.config.ts writes the HTML report in CI too
+      # (playwright-report/); traces of retried tests go to test-results/.
+      - name: Upload the Playwright report and traces
         if: failure()
         uses: actions/upload-artifact@v7
         with:
           name: playwright-report
-          path: ${{ inputs.working-directory }}/playwright-report/
+          path: |
+            ${{ inputs.working-directory }}/playwright-report/
+            ${{ inputs.working-directory }}/test-results/
           retention-days: 7
