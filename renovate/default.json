@@ -23,16 +23,23 @@
       "enabled": false
     },
     {
-      "description": "Docus changes config keys between minors; exact pin, manual review",
+      "description": "Owner rule: Node 24 (Vercel has no Node 26 runtime). The owner moves the Node major by hand, in mise.toml, engines.node and @types/node together",
+      "matchPackageNames": ["node", "@types/node"],
+      "allowedVersions": "<25"
+    },
+    {
+      "description": "Docus changes config keys between minors; exact pin, its own PR, manual review",
       "matchPackageNames": ["docus"],
       "rangeStrategy": "pin",
+      "groupName": "docus",
       "automerge": false
     },
     {
-      "description": "One PR per yuri4n.dev release: the submodule and the reusable-workflow refs move together",
+      "description": "One PR per yuri4n.dev release: the submodule and the reusable-workflow refs move together. No release-age wait: git-submodules (git-refs) has no release timestamps, so the preset's 25 h wait would hold the submodule forever",
       "matchManagers": ["git-submodules", "github-actions"],
       "matchPackageNames": ["/yuri4n\\.dev/"],
       "groupName": "yuri4n.dev library",
+      "minimumReleaseAge": null,
       "automerge": false
     }
   ]
