@@ -5,9 +5,10 @@
 # vercel.json turns the Git integration off ("git": {"deploymentEnabled":
 # false}). Never let both publish.
 #
-# The app declares the CLI: `pnpm add -D -E vercel@<version>`. So the app's
-# lockfile, its pnpm supply-chain settings (release age, trust policy) and
-# Renovate all cover the CLI. (`pnpm dlx` would skip all of them.)
+# The app declares the CLI: `pnpm add -D -E -w vercel@<version>` (-w: the app
+# root is a pnpm workspace root). So the app's lockfile, its pnpm supply-chain
+# settings (release age, trust policy) and Renovate all cover the CLI.
+# (`pnpm dlx` would skip all of them.)
 #
 # Call it with a tag, never with @main:
 #   uses: yuri4n/yuri4n.dev/.github/workflows/vercel-deploy.yml@v0.1.0
@@ -113,12 +114,15 @@ jobs:
           cache: pnpm
           cache-dependency-path: ${{ inputs.working-directory }}/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
+      # pnpm exec falls back to PATH, and a runner can have a global vercel.
+      # So check for the app's own binary.
       - name: Check the Vercel CLI
         run: |
-          if ! pnpm exec vercel --version; then
-            echo "::error::The app has no vercel CLI. Run pnpm add -D -E vercel@<version> in the app and commit package.json and pnpm-lock.yaml."
+          if [ ! -x node_modules/.bin/vercel ]; then
+            echo "::error::The app has no vercel CLI. Run pnpm add -D -E -w vercel@<version> and commit package.json and pnpm-lock.yaml."
             exit 1
           fi
+          pnpm exec vercel --version
       - name: Pull the Vercel project settings
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}

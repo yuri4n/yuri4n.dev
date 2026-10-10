@@ -249,10 +249,11 @@ Secrets: `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` (required),
 variable `DEPLOY_FROM_CI=true`.
 
 The workflow runs the app's own `vercel` CLI (`pnpm exec vercel`). Add it once
-in the app, at an exact version: `pnpm add -D -E vercel@<version>`. Then the
-app's lockfile, its pnpm supply-chain settings and Renovate cover the CLI,
-which runs with the Vercel token. The job stops with a clear message when the
-app has no `vercel` CLI.
+in the app, at an exact version: `pnpm add -D -E -w vercel@<version>` (`-w`
+because the app root is a pnpm workspace root). Then the app's lockfile, its
+pnpm supply-chain settings and Renovate cover the CLI, which runs with the
+Vercel token. The job stops with a clear message when the app has no
+`node_modules/.bin/vercel` (it does not use a global `vercel` of the runner).
 
 ### Deploy rule
 
