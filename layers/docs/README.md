@@ -24,8 +24,9 @@ layer.
 Why Docus 5.13.0 exactly: on this version the key `docus.assistant.enabled`
 is verified to win over the OIDC token. Docus 5.14 moved the agent features
 to `nuxt-agent-discovery` and changes these keys. The move to 5.14 is a
-reviewed Renovate pull request, and the `docs-ci.yml` assistant check must
-pass on it.
+reviewed Renovate pull request (its own "docus" PR), and the `docs-ci.yml`
+assistant check must pass on it. The library CI runs that check on
+`playground-docs` (the `docs` job).
 
 ## Use
 
@@ -127,9 +128,9 @@ Two `vercel.json` examples are in `examples/`. Copy one to the site root as
   CI builds have no OIDC token, so a wrong key would show first on Vercel.
 
 The deploy rule: work reaches production through a pull request, CI is the
-proof, and exactly one machine publishes each site. With a public library,
-the Vercel Git integration publishes. With a private library, the
-`vercel-deploy.yml` reusable workflow publishes, and `vercel.json` gets
+proof, and exactly one machine publishes each site. The library is public, so
+the default publisher is the Vercel Git integration. The alternative is the
+`vercel-deploy.yml` reusable workflow; then `vercel.json` also gets
 `"git": { "deploymentEnabled": false }`. Never turn on both. Agents never
 deploy.
 
@@ -145,8 +146,6 @@ jobs:
       working-directory: docs
       library-path: vendor/yuri4n.dev
       run-tests: true
-    secrets:
-      SUBMODULES_TOKEN: ${{ secrets.SUBMODULES_TOKEN }}
 ```
 
 A static site also passes `build-command: pnpm generate`,

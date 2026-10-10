@@ -41,7 +41,7 @@ Requirements: [mise](https://mise.jdx.dev) (it installs Node 24 and turns on
 corepack, which gives the pinned pnpm).
 
 ```sh
-mise install
+mise trust && mise install   # mise refuses the mise.toml of a new clone until you trust it
 pnpm install
 pnpm dev        # playground (app layers)
 pnpm dev:docs   # playground-docs (docs layers)
@@ -59,6 +59,11 @@ pnpm lint && pnpm typecheck && pnpm test && pnpm build
 `pnpm build` builds both playgrounds. `pnpm typecheck` checks the ESLint
 package types and both playgrounds. The tests use `node:test`.
 
+CI (`.github/workflows/ci.yml`) has two jobs: `ci` (the reusable
+`nuxt-ci.yml`: lint, type check, test, build of `playground`) and `docs` (the
+reusable `docs-ci.yml` on `playground-docs`: the build with a dummy Vercel
+OIDC token, the `llms.txt` files and the Docus assistant check).
+
 ## Use the library in an app
 
 The owner's `nuxt-template` repository (private) is already wired. These
@@ -66,19 +71,18 @@ steps are for an app that does not come from it.
 
 ### Add the submodule (once)
 
-In the app repository root (its `origin` must be a `github.com/yuri4n`
-repository, because the URL is relative):
+In the app repository root:
 
 ```sh
-git submodule add ../yuri4n.dev.git vendor/yuri4n.dev
+git submodule add https://github.com/yuri4n/yuri4n.dev.git vendor/yuri4n.dev
 git -C vendor/yuri4n.dev checkout v0.1.0
 git config -f .gitmodules submodule.vendor/yuri4n.dev.branch v0.1.0
 git add .gitmodules vendor/yuri4n.dev
 ```
 
-`branch = v0.1.0` in `.gitmodules` lets Renovate move the submodule from tag to
-tag. An app outside the `yuri4n` account writes the absolute URL
-`https://github.com/yuri4n/yuri4n.dev.git`.
+The library is public, so the HTTPS URL works for every app, for Vercel and
+for CI, with no token. `branch = v0.1.0` in `.gitmodules` lets Renovate move
+the submodule from tag to tag.
 
 Then add the packages that the app uses:
 
@@ -103,7 +107,7 @@ Then add the packages that the app uses:
 
 ```sh
 git clone --recurse-submodules <app-url>   # or clone, then: git submodule update --init --recursive
-mise install
+mise trust && mise install
 cp .env.example .env.local
 pnpm install
 ```
@@ -168,14 +172,15 @@ jobs:
       library-path: vendor/yuri4n.dev
       nitro-preset: vercel
       e2e: true
-    secrets:
-      SUBMODULES_TOKEN: ${{ secrets.SUBMODULES_TOKEN }}
 ```
 
-Pass secrets by name, not with `secrets: inherit`. Each workflow checks out the
-app with `github.token`, then the library at the commit of the app's gitlink
-with `SUBMODULES_TOKEN`. When `library-path` is set but the app has no gitlink
-there, the job stops with "is not a git submodule".
+Each workflow checks out the app with `github.token`, then the library at the
+commit of the app's gitlink. The library is public, so `github.token` can read
+it, and any repository can call these workflows. The secret
+`SUBMODULES_TOKEN` is optional: only a private copy of the library needs it.
+Pass secrets by name, not with `secrets: inherit`. When `library-path` is set
+but the app has no gitlink there, the job stops with "is not a git
+submodule". Each job stops after `timeout-minutes`.
 
 Renovate moves these refs to the next tag in the same pull request as the
 submodule (see [Renovate](#renovate)), so the app and its CI use one release.
@@ -197,8 +202,10 @@ Install, lint, type check, test and build; optional Playwright tests.
 | `build-command`      | `pnpm run build`    | build command                                            |
 | `nitro-preset`       | `''`                | the deploy's preset (`vercel`), so the proof is the same |
 | `e2e`                | `false`             | second job: Chromium + `pnpm run test:e2e`               |
+| `timeout-minutes`    | `30`                | limit of each job                                        |
 
-Secrets: `SUBMODULES_TOKEN` (optional).
+Secrets: `SUBMODULES_TOKEN` (optional). When the e2e job fails, it uploads
+`playwright-report/` and `test-results/` (traces).
 
 ### `docs-ci.yml`
 
@@ -209,6 +216,7 @@ when the runtime config says `enabled: true`, or when it cannot find the flag.
 | Input                | Default                  | Use                                              |
 | -------------------- | ------------------------ | ------------------------------------------------ |
 | `working-directory`  | `docs`                   | site root inside the repository                  |
+| `install-directory`  | `''`                     | where `pnpm install` runs; empty = the site root |
 | `node-version`       | `'24'`                   | Node major                                       |
 | `library-path`       | `''`                     | for example `vendor/yuri4n.dev`                  |
 | `library-repository` | `yuri4n/yuri4n.dev`      | repository of the library                        |
@@ -218,13 +226,14 @@ when the runtime config says `enabled: true`, or when it cannot find the flag.
 | `output-dir`         | `.output/public`         | `.vercel/output/static` for a static site        |
 | `check-files`        | `llms.txt llms-full.txt` | files that must exist in `output-dir`            |
 | `assistant-check`    | `true`                   | build with a dummy OIDC token and check the flag |
+| `timeout-minutes`    | `45`                     | limit of the job                                 |
 
 Secrets: `SUBMODULES_TOKEN` (optional).
 
 ### `vercel-deploy.yml`
 
-`vercel pull`, `vercel build` and `vercel deploy --prebuilt`. It is the one
-publisher of an app while this library is private.
+`vercel pull`, `vercel build` and `vercel deploy --prebuilt`: the
+alternative publisher of an app (see [Deploy rule](#deploy-rule)).
 
 | Input                | Default             | Use                             |
 | -------------------- | ------------------- | ------------------------------- |
@@ -233,39 +242,32 @@ publisher of an app while this library is private.
 | `library-path`       | `''`                | for example `vendor/yuri4n.dev` |
 | `library-repository` | `yuri4n/yuri4n.dev` | repository of the library       |
 | `environment`        | `production`        | `production` or `preview`       |
-| `vercel-version`     | `63.1.0`            | exact `vercel` CLI version      |
+| `timeout-minutes`    | `30`                | limit of the job                |
 
 Secrets: `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` (required),
 `SUBMODULES_TOKEN` (optional). The app turns the job on with the repository
 variable `DEPLOY_FROM_CI=true`.
 
-### Owner steps for a private library
-
-The owner does these steps. Agents never create or handle tokens.
-
-1. Let the apps call the workflows of this private repository:
-
-   ```sh
-   gh api -X PUT repos/yuri4n/yuri4n.dev/actions/permissions/access -f access_level=user
-   ```
-
-2. In each app, add the secret `SUBMODULES_TOKEN`: a fine-grained PAT with
-   Contents read on `yuri4n.dev` only. It does not need access to the app.
-3. For a CI deploy: add `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`,
-   set `DEPLOY_FROM_CI=true`, and keep `"git": { "deploymentEnabled": false }`
-   in the app's `vercel.json`.
+The workflow runs the app's own `vercel` CLI (`pnpm exec vercel`). Add it once
+in the app, at an exact version: `pnpm add -D -E vercel@<version>`. Then the
+app's lockfile, its pnpm supply-chain settings and Renovate cover the CLI,
+which runs with the Vercel token. The job stops with a clear message when the
+app has no `vercel` CLI.
 
 ### Deploy rule
 
 Work gets to production through a pull request. CI is the proof. Exactly one
 machine publishes each app, and it builds the same thing as the proof:
 
-- Private library (default): the `vercel-deploy.yml` job publishes, and the
-  Vercel Git integration is off.
-- Public library: the Vercel Git integration publishes. Delete the `git` key of
-  `vercel.json` and leave `DEPLOY_FROM_CI` unset.
+- Default: the Vercel Git integration publishes. Vercel clones the public
+  library submodule over HTTPS. The app's `vercel.json` has no `git` key, and
+  `DEPLOY_FROM_CI` stays unset.
+- Alternative: the `vercel-deploy.yml` job publishes. The owner adds the
+  `vercel` CLI to the app (see above), the secrets `VERCEL_TOKEN`,
+  `VERCEL_ORG_ID` and `VERCEL_PROJECT_ID`, the variable `DEPLOY_FROM_CI=true`,
+  and `"git": { "deploymentEnabled": false }` in the app's `vercel.json`.
 
-Never turn on both.
+Never turn on both. Agents never create or handle tokens.
 
 ## Renovate
 
@@ -286,13 +288,14 @@ The preset:
 - extends `github>nuxt/renovate-config-nuxt`, with weekly lockfile maintenance
   and `pnpmDedupe`;
 - labels every PR `dependencies` (release notes group them);
-- holds TypeScript below 7 and holds pnpm majors;
-- pins `docus` exactly and never automerges it;
+- holds TypeScript below 7, holds pnpm majors, and holds Node and
+  `@types/node` below 25 (owner rule: Node 24);
+- pins `docus` exactly, gives it its own PR ("docus") and never automerges
+  it;
 - groups the submodule and the `uses: yuri4n/yuri4n.dev/...@<tag>` refs into
-  one PR named "yuri4n.dev library".
-
-A private library needs the Renovate app installed on it too (or a `hostRules`
-token from the owner).
+  one PR named "yuri4n.dev library", with no release-age wait (git submodules
+  have no release timestamps, so the preset's 25-hour wait would hold the
+  submodule forever).
 
 The submodule PR moves only the gitlink. When a release changes a layer's
 dependencies, the PR's `pnpm-lock.yaml` is stale and CI fails at
@@ -313,6 +316,13 @@ push.
 
 Release notes come from `.github/release.yml` (labels `breaking`,
 `enhancement`, `bug`, `dependencies`).
+
+## Security
+
+Report a security problem privately, not in a public issue: see
+[.github/SECURITY.md](.github/SECURITY.md). The shared `yuri4n/.github`
+repository with the default community files of the account is not published
+yet, so this repository has its own security policy.
 
 ## License
 

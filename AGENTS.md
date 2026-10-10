@@ -39,7 +39,12 @@ needs it.
 
 ## 3. No personal data
 
+This repository is public. Everything that you commit here is public.
+
 - Do not add personal data, CV content, site branding or skins.
+- Do not add the names of private projects, private repository names,
+  private commit ids, Linear ids, absolute `/Users/...` paths or e-mail
+  addresses. Use neutral examples (`Acme.Point`, `owner/repo`).
 - Layers expose hooks: CSS variables, `app.config`, slots and Nuxt runtime
   hooks. Each app sets its own values.
 
@@ -72,6 +77,14 @@ Owner rule (2026-07-16): zero casts.
   closed". To restart a dead vite-node, run `touch nuxt.config.ts`.
 - Read `process` through `import process from 'node:process'`. The lint rule
   `node/prefer-global/process` requires this import.
+- Do not widen a value to `Record<string, unknown>` (or `any`) and spread it
+  into a typed object. Lint does not see this, but it bypasses the type check
+  like a cast.
+- Named exception (the owner must approve it): `LLMS_FULL_OFF` in
+  `layers/docs/nuxt.config.ts`. nuxt-llms 0.2.0 reads `llms.full` as a flag,
+  but its type does not permit `false`, and `declare module` cannot change
+  the type of a property. Do not copy this pattern. Remove the exception when
+  nuxt-llms permits `false`.
 
 ## 6. CSS
 
@@ -151,9 +164,10 @@ same thing.
 
 - Work gets to production only through a pull request.
 - CI is the proof. CI does not publish on its own.
-- Exactly one machine publishes each app. When this library is public, the
-  Vercel Git integration publishes. When this library is private, the
-  `vercel-deploy.yml` job publishes.
+- Exactly one machine publishes each app. This library is public, so the
+  default publisher is the Vercel Git integration. The alternative is the
+  `vercel-deploy.yml` job (the app sets `DEPLOY_FROM_CI=true` and turns the
+  Git integration off in `vercel.json`). Never turn on both.
 - The publisher runs the same build as the proof.
 - Agents never deploy, never push, and never create remote repositories without
   the owner's yes.
@@ -161,8 +175,9 @@ same thing.
 ## 16. Secrets
 
 - Agents never create, read, print or store tokens or secret values.
-- The owner creates `SUBMODULES_TOKEN` (a fine-grained PAT with Contents read
-  on `yuri4n.dev` only) and the Vercel secrets.
+- The owner creates the Vercel secrets when an app publishes from CI.
+  `SUBMODULES_TOKEN` is optional: the library is public, so `github.token`
+  can read it.
 - For `.env*` files, write only the key names. Never write the values.
 
 ## 17. Local planning files

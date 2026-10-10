@@ -14,10 +14,13 @@ const siteUrl = process.env.NUXT_SITE_URL
 
 // `llms.full: false` turns off the /llms-full.txt route of nuxt-llms (this
 // layer serves its own), and defu keeps `false` over the Docus default
-// (docus 5.13 modules/config.ts). nuxt-llms 0.2.0 types `full` as an object
-// only, so the key comes through a spread of a plain record. That needs no
-// cast and no "expect error" comment, and it type-checks whether or not the
-// nuxt-llms types resolve in the consuming app.
+// (docus 5.13 modules/config.ts). nuxt-llms 0.2.0 reads `full` as a flag
+// (`if (options.full)`) but types it as an object only, and `declare module`
+// cannot widen the type of an existing property (TS2717). So `false` comes
+// through a spread of a `Record<string, unknown>`, which TypeScript does not
+// check against the option type. This is a type bypass, like a cast: it is
+// the one named exception in AGENTS.md section 5. Do not copy the pattern.
+// Remove it when nuxt-llms types `full` as `false | { ... }`.
 const LLMS_FULL_OFF: Record<string, unknown> = { full: false }
 
 export default defineNuxtConfig({
