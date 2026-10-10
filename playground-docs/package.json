@@ -1,0 +1,24 @@
+{
+  "name": "@yuri4n/playground-docs",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "typecheck": "node scripts/typecheck.mjs"
+  },
+  "dependencies": {
+    "@nuxt/content": "^3.16.1",
+    "@nuxt/ui": "^4.11.3",
+    "@yuri4n/nuxt-docs-exdoc": "workspace:*",
+    "nuxt": "^4.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "~6.0.3",
+    "vue-tsc": "^3.3.12"
+  }
+}

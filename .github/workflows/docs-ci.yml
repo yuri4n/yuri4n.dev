@@ -1,0 +1,145 @@
+# Reusable CI for a Docus site. It installs, runs the tests (optional),
+# builds, checks the files for agents, and checks that the Docus assistant is
+# off. It never deploys.
+#
+# Call it with a tag, never with @main:
+#   uses: yuri4n/yuri4n.dev/.github/workflows/docs-ci.yml@v0.1.0
+#
+# A static site passes:
+#   build-command: pnpm generate
+#   nitro-preset: vercel_static
+#   output-dir: .vercel/output/static
+name: Docs CI
+
+on:
+  workflow_call:
+    inputs:
+      working-directory:
+        type: string
+        default: docs
+      node-version:
+        type: string
+        default: '24'
+      # For example vendor/yuri4n.dev. Empty: no library checkout.
+      library-path:
+        type: string
+        default: ''
+      library-repository:
+        type: string
+        default: yuri4n/yuri4n.dev
+      run-tests:
+        type: boolean
+        default: false
+      build-command:
+        type: string
+        default: pnpm run build
+      # The deploy's Nitro preset, so the proof builds the same thing.
+      nitro-preset:
+        type: string
+        default: ''
+      # Relative to working-directory.
+      output-dir:
+        type: string
+        default: .output/public
+      # Space-separated files that must exist and be non-empty in output-dir.
+      check-files:
+        type: string
+        default: llms.txt llms-full.txt
+      # Build with a dummy VERCEL_OIDC_TOKEN and fail when the assistant is on.
+      assistant-check:
+        type: boolean
+        default: true
+    secrets:
+      # Read-only PAT (Contents read on yuri4n.dev), only for a private library.
+      SUBMODULES_TOKEN:
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  site:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    steps:
+      - name: Check out the app
+        uses: actions/checkout@v7
+        with:
+          # github.token only; submodules stay empty.
+          persist-credentials: false
+      - name: Find the library commit
+        id: library
+        if: inputs.library-path != ''
+        working-directory: .
+        env:
+          LIBRARY_PATH: ${{ inputs.library-path }}
+        # The gitlink (mode 160000) is the library commit that the app pins.
+        run: |
+          mode="$(git ls-files -s -- "$LIBRARY_PATH" | awk 'NR == 1 { print $1 }')"
+          if [ "$mode" != 160000 ]; then
+            echo "::error::$LIBRARY_PATH is not a git submodule: run pnpm init:app, see README"
+            exit 1
+          fi
+          echo "sha=$(git rev-parse "HEAD:$LIBRARY_PATH")" >> "$GITHUB_OUTPUT"
+      - name: Check out the library
+        if: inputs.library-path != ''
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ inputs.library-repository }}
+          ref: ${{ steps.library.outputs.sha }}
+          path: ${{ inputs.library-path }}
+          # github.token is enough for a public library.
+          token: ${{ secrets.SUBMODULES_TOKEN || github.token }}
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: ${{ inputs.working-directory }}/package.json
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: pnpm
+          cache-dependency-path: ${{ inputs.working-directory }}/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - name: Test
+        if: inputs.run-tests
+        run: pnpm test
+      - name: Build
+        env:
+          NITRO_PRESET: ${{ inputs.nitro-preset }}
+          # Read from the environment, not pasted into the script
+          # (no expression injection).
+          BUILD_COMMAND: ${{ inputs.build-command }}
+          # A dummy value: Vercel injects a real token at build time, and Docus
+          # treats any token as "the assistant has auth". Empty = no token.
+          VERCEL_OIDC_TOKEN: ${{ inputs.assistant-check && 'ci-assistant-check' || '' }}
+        run: $BUILD_COMMAND
+      - name: Check the build output
+        env:
+          CHECK_FILES: ${{ inputs.check-files }}
+          OUTPUT_DIR: ${{ inputs.output-dir }}
+          ASSISTANT_CHECK: ${{ inputs.assistant-check }}
+        run: |
+          case "$OUTPUT_DIR" in
+            .vercel/output/*) OUTPUT_ROOT=.vercel/output ;;
+            *) OUTPUT_ROOT="${OUTPUT_DIR%%/*}" ;;
+          esac
+          for f in $CHECK_FILES; do
+            test -s "$OUTPUT_DIR/$f" || { echo "::error::missing $OUTPUT_DIR/$f"; exit 1; }
+          done
+          # Assistant check: the public runtime config must say enabled false
+          # (a build with the assistant on bills the Vercel AI Gateway). Nitro
+          # writes runtimeConfig as JSON in the server bundle; static HTML
+          # carries it as a JS object. -z reads each file as one record, so the
+          # pattern also matches pretty-printed JSON.
+          ON='assistant"?:[[:space:]]*\{[[:space:]]*"?enabled"?:[[:space:]]*true'
+          OFF='assistant"?:[[:space:]]*\{[[:space:]]*"?enabled"?:[[:space:]]*false'
+          if [ "$ASSISTANT_CHECK" = true ]; then
+            if grep -rzqE "$ON" "$OUTPUT_ROOT"; then
+              echo "::error::Docus assistant is enabled in the build"
+              exit 1
+            fi
+            # Proof that the pattern matches the real serialization.
+            grep -rzqE "$OFF" "$OUTPUT_ROOT" || { echo "::error::assistant flag not found; update the check"; exit 1; }
+          fi

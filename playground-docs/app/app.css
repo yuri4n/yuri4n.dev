@@ -1,0 +1,12 @@
+/* The skin of this site: fonts and shape. Docus imports this file at the
+   end of its generated CSS, so it does not import Tailwind again. The docs
+   layer reads two optional hooks, --docs-accent-2 and --docs-glow (see the
+   README of @yuri4n/nuxt-docs). */
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Inconsolata', ui-monospace, 'SF Mono', Menlo, monospace;
+}
+
+:root {
+  --ui-radius: 0.375rem;
+}

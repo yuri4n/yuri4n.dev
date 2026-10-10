@@ -1,0 +1,166 @@
+/* @yuri4n/nuxt-docs: structural styles for the layer components and the
+   content conventions of the docs sites.
+
+   Plain CSS. Docus scans only the final app for Tailwind classes, so this
+   file uses no Tailwind directive. Colors come from the Nuxt UI tokens
+   (--ui-*) and from two hook variables that a site can set in its
+   app/app.css:
+
+     --docs-accent-2  a second accent (links inside code fences, the hover
+                      of the source chip). Default: --ui-primary.
+     --docs-glow      a box-shadow value for chips and buttons, for example
+                      0 0 10px color-mix(in srgb, var(--ui-primary) 25%,
+                      transparent). Default: none.
+
+   Do NOT declare the two hook variables on :root in this file. Docus puts
+   its generated docus.css (which imports the app's app.css at its end)
+   first in `css`, and this file comes after it. A :root default here would
+   win over the value of the site at equal specificity (docus 5.13
+   modules/css.ts). So every use reads them with a fallback. */
+
+/* Code references: the exdoc layer wraps known API names in links with this
+   class. Inline chips keep their chip look; a dotted rule says "this one
+   goes somewhere". Inside fences the link keeps the token color. */
+a.code-ref {
+  text-decoration: none;
+}
+
+a.code-ref > code {
+  border-bottom: 1px dotted
+    color-mix(in srgb, var(--ui-primary) 50%, transparent);
+}
+
+a.code-ref:hover > code {
+  border-bottom-style: solid;
+}
+
+main pre a.code-ref {
+  color: inherit;
+  border-bottom: 1px dotted
+    color-mix(in srgb, var(--docs-accent-2, var(--ui-primary)) 45%, transparent);
+}
+
+main pre a.code-ref:hover {
+  color: var(--docs-accent-2, var(--ui-primary));
+  border-bottom-style: solid;
+}
+
+/* The "Source on GitHub" chip on generated API pages
+   ([Source on GitHub](...){.source-link}): muted until hovered. */
+a.source-link {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.75em;
+  line-height: 1.3;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ui-text-muted);
+  border: 1px solid var(--ui-border-accented);
+  border-radius: calc(var(--ui-radius) / 2);
+  padding: 0.14rem 0.5rem;
+  transition:
+    color 140ms linear,
+    border-color 140ms linear,
+    box-shadow 140ms linear;
+}
+
+a.source-link:hover {
+  color: var(--docs-accent-2, var(--ui-primary));
+  border-color: color-mix(
+    in srgb,
+    var(--docs-accent-2, var(--ui-primary)) 55%,
+    transparent
+  );
+  box-shadow: var(--docs-glow, none);
+}
+
+/* Mermaid diagrams: centered, with vertical margins; a click zooms. */
+.mermaid-figure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-block: 1.5rem;
+  overflow-x: auto;
+  cursor: zoom-in;
+}
+
+/* Figure captions: by convention, an italic-only paragraph directly below a
+   figure. Small, centered, muted. */
+main p:has(> em:only-child) {
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+  color: var(--ui-text-muted);
+}
+
+/* The zoom lightbox: a fixed overlay; the canvas moves with one
+   transform. */
+.mermaid-zoom {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: color-mix(in srgb, var(--ui-bg) 90%, transparent);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  touch-action: none;
+}
+
+.mermaid-zoom-canvas {
+  will-change: transform;
+  cursor: grab;
+  user-select: none;
+}
+
+.mermaid-zoom-canvas:active {
+  cursor: grabbing;
+}
+
+.mermaid-zoom-canvas svg {
+  max-width: 90vw;
+  height: auto;
+}
+
+.mermaid-zoom-controls {
+  position: fixed;
+  inset-block-start: 1rem;
+  inset-inline-end: 1rem;
+  display: flex;
+  gap: 0.3rem;
+}
+
+.mermaid-zoom-controls button {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ui-primary);
+  background: var(--ui-bg-elevated);
+  border: 1px solid var(--ui-primary);
+  border-radius: var(--ui-radius);
+  padding: 0.25rem 0.6rem;
+  cursor: pointer;
+  box-shadow: var(--docs-glow, none);
+}
+
+/* The AI SLOP stamp: a small chip that marks AI-written pages, written
+   inline as [AI SLOP]{.ai-slop} at the top of a page. The small length on
+   vertical-align lifts the chip, so it sits optically centered on the text
+   line. Each site writes its own notice text; only the look is here. */
+.ai-slop {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.7em;
+  line-height: 1.3;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ui-primary);
+  border: 1px solid color-mix(in srgb, var(--ui-primary) 55%, transparent);
+  border-radius: calc(var(--ui-radius) / 2);
+  padding: 0.08rem 0.45rem;
+  margin-inline-end: 0.5rem;
+  vertical-align: 0.12em;
+  box-shadow: var(--docs-glow, none);
+}

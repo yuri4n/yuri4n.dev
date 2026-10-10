@@ -1,0 +1,33 @@
+# Keys are in the order of the antfu pnpm-workspace sort rule (yaml/sort-keys).
+
+# Supply chain (pnpm docs). Renovate waits 25 h, which is longer.
+# trustPolicyExclude starts empty. Add an entry only with a comment that names
+# the failing version.
+blockExoticSubdeps: true
+minimumReleaseAge: 1440
+trustPolicy: no-downgrade
+trustPolicyIgnoreAfter: 525600
+
+packages:
+  - layers/*
+  - packages/*
+  - playground
+  - playground-docs
+
+# One copy, so @nuxt/eslint withNuxt() and antfu() compose (two copies break
+# the merge of their config items).
+overrides:
+  eslint-flat-config-utils: ^3.2.0
+
+# Build scripts: allow only what is needed.
+# false = install the package without running its build script.
+# better-sqlite3: Docus peer; Docus and the content layer use node:sqlite.
+# sharp: no @nuxt/image in the library.
+allowBuilds:
+  '@parcel/watcher': false
+  '@tailwindcss/oxide': false
+  better-sqlite3: false
+  esbuild: false
+  sharp: false
+  unrs-resolver: false
+  vue-demi: false

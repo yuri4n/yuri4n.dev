@@ -1,0 +1,39 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["github>nuxt/renovate-config-nuxt"],
+  "labels": ["dependencies"],
+  "lockFileMaintenance": {
+    "enabled": true
+  },
+  "postUpdateOptions": ["pnpmDedupe"],
+  "packageRules": [
+    {
+      "matchDepTypes": ["resolutions"],
+      "enabled": false
+    },
+    {
+      "description": "vue-tsc and typescript-eslint need the TypeScript 6 JS API; hold TypeScript 7",
+      "matchPackageNames": ["typescript"],
+      "allowedVersions": "<7"
+    },
+    {
+      "description": "A pnpm major changes config semantics; the owner moves it by hand",
+      "matchPackageNames": ["pnpm"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+    {
+      "description": "Docus changes config keys between minors; exact pin, manual review",
+      "matchPackageNames": ["docus"],
+      "rangeStrategy": "pin",
+      "automerge": false
+    },
+    {
+      "description": "One PR per yuri4n.dev release: the submodule and the reusable-workflow refs move together",
+      "matchManagers": ["git-submodules", "github-actions"],
+      "matchPackageNames": ["/yuri4n\\.dev/"],
+      "groupName": "yuri4n.dev library",
+      "automerge": false
+    }
+  ]
+}

@@ -1,0 +1,176 @@
+# Reusable CI for a Nuxt app or for this library: install, lint, type-check,
+# test, build, and optional end-to-end tests. It proves; it never deploys.
+#
+# Call it with a tag, never with @main:
+#   uses: yuri4n/yuri4n.dev/.github/workflows/nuxt-ci.yml@v0.1.0
+#
+# Checkout of a private library: actions/checkout uses one token for all that
+# it fetches, so the app is checked out with github.token and the library in a
+# second step, at the commit of the app's gitlink, with SUBMODULES_TOKEN. Only
+# the library checkout sees the PAT. The .gitmodules URL plays no role here.
+name: Nuxt CI
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        type: string
+        default: '24'
+      working-directory:
+        type: string
+        default: .
+      # For example vendor/yuri4n.dev. Empty: no library checkout.
+      library-path:
+        type: string
+        default: ''
+      library-repository:
+        type: string
+        default: yuri4n/yuri4n.dev
+      lint:
+        type: boolean
+        default: true
+      typecheck:
+        type: boolean
+        default: true
+      test:
+        type: boolean
+        default: true
+      build:
+        type: boolean
+        default: true
+      build-command:
+        type: string
+        default: pnpm run build
+      # The deploy's Nitro preset, so the proof builds the same thing.
+      # Empty: Nuxt picks its default (node-server in CI).
+      nitro-preset:
+        type: string
+        default: ''
+      e2e:
+        type: boolean
+        default: false
+    secrets:
+      # Read-only PAT (Contents read on yuri4n.dev), only for a private library.
+      SUBMODULES_TOKEN:
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    steps:
+      - name: Check out the app
+        uses: actions/checkout@v7
+        with:
+          # github.token only; submodules stay empty.
+          persist-credentials: false
+      - name: Find the library commit
+        id: library
+        if: inputs.library-path != ''
+        working-directory: .
+        env:
+          LIBRARY_PATH: ${{ inputs.library-path }}
+        # The gitlink (mode 160000) is the library commit that the app pins.
+        run: |
+          mode="$(git ls-files -s -- "$LIBRARY_PATH" | awk 'NR == 1 { print $1 }')"
+          if [ "$mode" != 160000 ]; then
+            echo "::error::$LIBRARY_PATH is not a git submodule: run pnpm init:app, see README"
+            exit 1
+          fi
+          echo "sha=$(git rev-parse "HEAD:$LIBRARY_PATH")" >> "$GITHUB_OUTPUT"
+      - name: Check out the library
+        if: inputs.library-path != ''
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ inputs.library-repository }}
+          ref: ${{ steps.library.outputs.sha }}
+          path: ${{ inputs.library-path }}
+          # github.token is enough for a public library.
+          token: ${{ secrets.SUBMODULES_TOKEN || github.token }}
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: ${{ inputs.working-directory }}/package.json
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: pnpm
+          cache-dependency-path: ${{ inputs.working-directory }}/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - name: Lint
+        if: inputs.lint
+        run: pnpm run lint
+      - name: Type check
+        if: inputs.typecheck
+        run: pnpm run typecheck
+      - name: Test
+        if: inputs.test
+        run: pnpm run test
+      - name: Build
+        if: inputs.build
+        env:
+          NITRO_PRESET: ${{ inputs.nitro-preset }}
+          # Read from the environment, not pasted into the script
+          # (no expression injection).
+          BUILD_COMMAND: ${{ inputs.build-command }}
+        run: $BUILD_COMMAND
+
+  e2e:
+    if: inputs.e2e
+    needs: check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    steps:
+      - name: Check out the app
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Find the library commit
+        id: library
+        if: inputs.library-path != ''
+        working-directory: .
+        env:
+          LIBRARY_PATH: ${{ inputs.library-path }}
+        run: |
+          mode="$(git ls-files -s -- "$LIBRARY_PATH" | awk 'NR == 1 { print $1 }')"
+          if [ "$mode" != 160000 ]; then
+            echo "::error::$LIBRARY_PATH is not a git submodule: run pnpm init:app, see README"
+            exit 1
+          fi
+          echo "sha=$(git rev-parse "HEAD:$LIBRARY_PATH")" >> "$GITHUB_OUTPUT"
+      - name: Check out the library
+        if: inputs.library-path != ''
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ inputs.library-repository }}
+          ref: ${{ steps.library.outputs.sha }}
+          path: ${{ inputs.library-path }}
+          token: ${{ secrets.SUBMODULES_TOKEN || github.token }}
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: ${{ inputs.working-directory }}/package.json
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: pnpm
+          cache-dependency-path: ${{ inputs.working-directory }}/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+      - name: End-to-end tests
+        run: pnpm run test:e2e
+      - name: Upload the Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: ${{ inputs.working-directory }}/playwright-report/
+          retention-days: 7

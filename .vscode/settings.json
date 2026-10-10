@@ -1,0 +1,55 @@
+{
+  // Enable the ESlint flat config support
+  "eslint.useFlatConfig": true,
+
+  // No editor formatter needed: ESLint owns ALL formatting (css/html/md/js/ts
+  // via antfu, and .vue via eslint-plugin-prettier), applied through the
+  // source.fixAll.eslint code action on save.
+  "editor.formatOnSave": false,
+  "editor.tabSize": 2,
+
+  // Auto fix: one ESLint pass formats AND lints every file type on save.
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "never"
+  },
+
+  // Silent the stylistic rules in you IDE, but still auto fix them
+  "eslint.rules.customizations": [
+    { "rule": "style/*", "severity": "off" },
+    { "rule": "format/*", "severity": "off" },
+    { "rule": "prettier/prettier", "severity": "off" },
+    { "rule": "*-indent", "severity": "off" },
+    { "rule": "*-spacing", "severity": "off" },
+    { "rule": "*-spaces", "severity": "off" },
+    { "rule": "*-order", "severity": "off" },
+    { "rule": "*-dangle", "severity": "off" },
+    { "rule": "*-newline", "severity": "off" },
+    { "rule": "*quotes", "severity": "off" },
+    { "rule": "*semi", "severity": "off" },
+    { "rule": "*unused*", "severity": "warn" }
+  ],
+
+  // Enable eslint for all supported languages
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact",
+    "vue",
+    "html",
+    "markdown",
+    "json",
+    "jsonc",
+    "yaml",
+    "tailwindcss",
+    "css",
+    "scss"
+  ],
+
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
+
+  "tailwindCSS.classFunctions": ["cva", "cn"]
+}

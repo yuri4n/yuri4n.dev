@@ -1,0 +1,11 @@
+/*
+ * The playground shows the neutral defaults of @yuri4n/nuxt-ui, so it sets
+ * no skin. An app sets its values after the import.
+ */
+@import '@yuri4n/nuxt-ui/app/assets/css/base.css';
+
+/*
+ * Classes in Markdown (MDC attributes) are outside app/, which is the only
+ * folder Nuxt UI scans. Path relative to this file (content layer README).
+ */
+@source '../../../content/**/*';

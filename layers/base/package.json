@@ -1,0 +1,13 @@
+{
+  "name": "@yuri4n/nuxt-base",
+  "type": "module",
+  "version": "0.1.0",
+  "main": "./nuxt.config.ts",
+  "files": ["app", "nuxt.config.ts", "server", "shared"],
+  "dependencies": {
+    "@nuxtjs/robots": "^6.2.4"
+  },
+  "devDependencies": {
+    "nuxt": "^4.6.0"
+  }
+}

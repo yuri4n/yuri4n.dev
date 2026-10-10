@@ -1,0 +1,26 @@
+/*
+ * Entry for apps. Put this line first in the app's CSS entry
+ * (app/assets/css/main.css), then the app's own values (skin):
+ *
+ *   @import '@yuri4n/nuxt-ui/app/assets/css/base.css';
+ */
+@import 'tailwindcss';
+@import '@nuxt/ui';
+@import './tokens.css';
+@import './bridge.css';
+
+/*
+ * Matches the .dark element itself (Nuxt UI puts .dark on <html>) and adds
+ * no specificity. `:is(.dark *)` would miss `dark:` utilities on <html>.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}

@@ -1,0 +1,34 @@
+/*
+ * Nuxt UI design tokens, aligned to the same semantic vars. One block covers
+ * both modes (the referenced vars flip under `.dark`). `html:root` outranks
+ * both Nuxt UI's `@layer theme` defaults and the `:root`/`.dark` color vars
+ * it injects at runtime. Note: Nuxt UI has no `accent` alias — its aliases
+ * are primary/secondary/success/info/warning/error/neutral; shade-scale vars
+ * (--ui-color-primary-*) still come from app.config and are NOT the app's
+ * `--primary` value, so avoid shade utilities like text-primary-500.
+ *
+ * `--ui-bg-muted` stays: Tailwind resolves `bg-muted` through Nuxt UI's
+ * `--background-color-muted` (= `--ui-bg-muted`), so this line keeps both
+ * kits on one value.
+ */
+html:root {
+  --ui-primary: var(--primary);
+  --ui-secondary: var(--secondary);
+  --ui-error: var(--destructive);
+  --ui-bg: var(--background);
+  --ui-bg-muted: var(--muted);
+  --ui-bg-elevated: var(--card);
+  --ui-bg-accented: var(--accent);
+  --ui-bg-inverted: var(--foreground);
+  --ui-text: var(--foreground);
+  --ui-text-dimmed: var(--muted-foreground);
+  --ui-text-muted: var(--muted-foreground);
+  --ui-text-toned: var(--foreground);
+  --ui-text-highlighted: var(--foreground);
+  --ui-text-inverted: var(--background);
+  --ui-border: var(--border);
+  --ui-border-muted: var(--border);
+  --ui-border-accented: var(--input);
+  --ui-border-inverted: var(--foreground);
+  --ui-radius: var(--radius-sm);
+}

@@ -1,0 +1,67 @@
+name: Layer bug
+description: A yuri4n.dev package, workflow or preset does not work as expected.
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for the report. Write one problem in each issue.
+  - type: dropdown
+    id: package
+    attributes:
+      label: Package
+      description: Which part of the library has the problem?
+      options:
+        - '@yuri4n/nuxt-base'
+        - '@yuri4n/nuxt-ui'
+        - '@yuri4n/nuxt-content'
+        - '@yuri4n/nuxt-docs'
+        - '@yuri4n/nuxt-docs-exdoc'
+        - '@yuri4n/eslint-config'
+        - Reusable workflows
+        - Renovate preset
+    validations:
+      required: true
+  - type: input
+    id: tag
+    attributes:
+      label: Library tag
+      description: The yuri4n.dev tag that the app uses. For a library branch, write the commit.
+      placeholder: v0.1.0
+    validations:
+      required: true
+  - type: input
+    id: app
+    attributes:
+      label: Consuming app
+      description: The app repository that shows the problem, if there is one.
+      placeholder: yuri4n/my-app
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Run pnpm install in the app root.
+        2. Run pnpm build.
+        3. Open the page.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Paste the error output. GitHub shows it as a shell block.
+      render: shell

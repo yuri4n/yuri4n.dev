@@ -1,0 +1,19 @@
+# Categories for generated release notes. A pull request goes into the first
+# category whose label it has. Dependency PRs (Renovate) stay visible.
+changelog:
+  categories:
+    - title: Breaking changes
+      labels:
+        - breaking
+    - title: Features
+      labels:
+        - enhancement
+    - title: Fixes
+      labels:
+        - bug
+    - title: Dependencies
+      labels:
+        - dependencies
+    - title: Other
+      labels:
+        - '*'

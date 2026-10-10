@@ -1,0 +1,29 @@
+{
+  "name": "@yuri4n/playground",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "typecheck": "nuxt typecheck"
+  },
+  "dependencies": {
+    "@iconify-json/lucide": "^1.2.106",
+    "@nuxt/content": "^3.16.1",
+    "@nuxt/ui": "^4.11.3",
+    "@yuri4n/nuxt-base": "workspace:*",
+    "@yuri4n/nuxt-content": "workspace:*",
+    "@yuri4n/nuxt-ui": "workspace:*",
+    "nuxt": "^4.6.0",
+    "tailwindcss": "^4.3.3",
+    "vue": "^3.5.43"
+  },
+  "devDependencies": {
+    "@nuxt/eslint": "^1.17.0",
+    "@types/node": "^24.0.0",
+    "typescript": "~6.0.3",
+    "vue-tsc": "^3.3.12"
+  }
+}

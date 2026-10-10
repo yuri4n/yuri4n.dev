@@ -1,0 +1,17 @@
+{
+  "name": "@yuri4n/nuxt-docs-exdoc",
+  "type": "module",
+  "version": "0.1.0",
+  "main": "./nuxt.config.ts",
+  "bin": {
+    "ingest-exdoc": "./bin/ingest-exdoc.mjs"
+  },
+  "files": ["app", "bin", "lib", "nuxt.config.ts"],
+  "dependencies": {
+    "@nuxt/ui": "^4.11.3",
+    "@yuri4n/nuxt-docs": "workspace:*"
+  },
+  "devDependencies": {
+    "nuxt": "^4.6.0"
+  }
+}

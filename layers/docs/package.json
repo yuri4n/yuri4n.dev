@@ -1,0 +1,17 @@
+{
+  "name": "@yuri4n/nuxt-docs",
+  "type": "module",
+  "version": "0.1.0",
+  "main": "./nuxt.config.ts",
+  "files": ["app", "examples", "nuxt.config.ts", "server"],
+  "dependencies": {
+    "@nuxt/content": "^3.16.1",
+    "@nuxt/ui": "^4.11.3",
+    "docus": "5.13.0",
+    "mermaid": "^12.1.0",
+    "minimark": "^0.2.0"
+  },
+  "devDependencies": {
+    "nuxt": "^4.6.0"
+  }
+}

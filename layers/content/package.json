@@ -1,0 +1,12 @@
+{
+  "name": "@yuri4n/nuxt-content",
+  "type": "module",
+  "version": "0.1.0",
+  "main": "./nuxt.config.ts",
+  "dependencies": {
+    "@nuxt/content": "^3.16.1"
+  },
+  "devDependencies": {
+    "nuxt": "^4.6.0"
+  }
+}

@@ -1,0 +1,21 @@
+# Library CI: the root scripts lint, type-check, test and build both
+# playgrounds and the ESLint package. It never deploys.
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  # A run on main proves the commit that a release tag names: never cancel it.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  ci:
+    uses: ./.github/workflows/nuxt-ci.yml
