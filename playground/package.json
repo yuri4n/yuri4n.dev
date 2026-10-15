@@ -15,6 +15,7 @@
     "@nuxt/ui": "^4.11.3",
     "@yuri4n/nuxt-base": "workspace:*",
     "@yuri4n/nuxt-content": "workspace:*",
+    "@yuri4n/nuxt-preferences": "workspace:*",
     "@yuri4n/nuxt-ui": "workspace:*",
     "nuxt": "^4.6.0",
     "tailwindcss": "^4.3.3",

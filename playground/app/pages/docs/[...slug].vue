@@ -1,10 +1,15 @@
 <script setup lang="ts">
 const route = useRoute()
+const contentPath = computed(() => {
+  const slug = route.params.slug
+  const path = Array.isArray(slug) ? slug.join('/') : slug
+  return path ? `/docs/${path}` : '/docs'
+})
 
 // The key follows the path, so each docs page has its own payload entry.
 const { data: page } = await useAsyncData(
-  () => `docs:${route.path}`,
-  () => queryCollection('docs').path(route.path).first(),
+  () => `docs:${contentPath.value}`,
+  () => queryCollection('docs').path(contentPath.value).first(),
 )
 
 if (!page.value) {

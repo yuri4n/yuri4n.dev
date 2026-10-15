@@ -15,6 +15,7 @@ The packages:
 - `packages/eslint-config`: `@yuri4n/eslint-config`, the one ESLint preset.
 - `layers/base`: `@yuri4n/nuxt-base`. Robots, the site URL and `<html lang>`.
 - `layers/ui`: `@yuri4n/nuxt-ui`. Nuxt UI 4, Tailwind 4 and the token contract.
+- `layers/preferences`: `@yuri4n/nuxt-preferences`. Language and color mode.
 - `layers/content`: `@yuri4n/nuxt-content`. Nuxt Content 3 on `node:sqlite`.
 - `layers/docs`: `@yuri4n/nuxt-docs`. The Docus base for docs sites.
 - `layers/docs-exdoc`: `@yuri4n/nuxt-docs-exdoc`. The Elixir and ExDoc add-on.

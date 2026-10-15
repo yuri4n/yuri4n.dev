@@ -12,14 +12,15 @@ Rules for people and agents: [AGENTS.md](AGENTS.md).
 
 ## Packages
 
-| Package                   | Path                     | What it gives                                                                     |
-| ------------------------- | ------------------------ | --------------------------------------------------------------------------------- |
-| `@yuri4n/nuxt-base`       | `layers/base`            | robots.txt, the site URL, the default `<html lang>`                               |
-| `@yuri4n/nuxt-ui`         | `layers/ui`              | Nuxt UI 4 (it owns Tailwind 4), the token contract, the Vercel fix for icons      |
-| `@yuri4n/nuxt-content`    | `layers/content`         | Nuxt Content 3 on `node:sqlite`, Shiki themes that follow the color mode (opt-in) |
-| `@yuri4n/nuxt-docs`       | `layers/docs`            | Docus 5.13 base: Mermaid, docs CSS, `/llms-full.txt`, the AI assistant off        |
-| `@yuri4n/nuxt-docs-exdoc` | `layers/docs-exdoc`      | Elixir and ExDoc links and the `ingest-exdoc` CLI (extends `@yuri4n/nuxt-docs`)   |
-| `@yuri4n/eslint-config`   | `packages/eslint-config` | The ESLint preset (antfu 9, zero casts, Prettier for `.vue`)                      |
+| Package                    | Path                     | What it gives                                                                       |
+| -------------------------- | ------------------------ | ----------------------------------------------------------------------------------- |
+| `@yuri4n/nuxt-base`        | `layers/base`            | robots.txt, the site URL, the default `<html lang>`                                 |
+| `@yuri4n/nuxt-ui`          | `layers/ui`              | Nuxt UI 4 (it owns Tailwind 4), the token contract, the Vercel fix for icons        |
+| `@yuri4n/nuxt-preferences` | `layers/preferences`     | English, Spanish, Brazilian Portuguese and persistent system/light/dark preferences |
+| `@yuri4n/nuxt-content`     | `layers/content`         | Nuxt Content 3 on `node:sqlite`, Shiki themes that follow the color mode (opt-in)   |
+| `@yuri4n/nuxt-docs`        | `layers/docs`            | Docus 5.13 base: Mermaid, docs CSS, `/llms-full.txt`, the AI assistant off          |
+| `@yuri4n/nuxt-docs-exdoc`  | `layers/docs-exdoc`      | Elixir and ExDoc links and the `ingest-exdoc` CLI (extends `@yuri4n/nuxt-docs`)     |
+| `@yuri4n/eslint-config`    | `packages/eslint-config` | The ESLint preset (antfu 9, zero casts, Prettier for `.vue`)                        |
 
 The layers do not extend each other. An app lists the layers that it wants.
 Only `@yuri4n/nuxt-docs-exdoc` extends `@yuri4n/nuxt-docs`, because it cannot
@@ -30,7 +31,8 @@ Also in this repository:
 - `.github/workflows/`: the reusable workflows `nuxt-ci.yml`, `docs-ci.yml`
   and `vercel-deploy.yml` (see [Use the reusable workflows](#use-the-reusable-workflows)).
 - `renovate/default.json`: the Renovate preset of every app.
-- `playground/`: a test app that extends `base`, `ui` and `content`.
+- `playground/`: a test app that extends `base`, `ui`, `content` and
+  `preferences`.
 - `playground-docs/`: a Docus test site that extends the docs layers. Docus
   cannot share an app with the ui layer, so the docs layers have their own
   playground.

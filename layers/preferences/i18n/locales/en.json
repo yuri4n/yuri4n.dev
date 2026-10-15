@@ -1,0 +1,9 @@
+{
+  "preference": {
+    "language": "Language",
+    "appearance": "Appearance",
+    "system": "System",
+    "light": "Light",
+    "dark": "Dark"
+  }
+}

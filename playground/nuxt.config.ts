@@ -5,8 +5,20 @@ export default defineNuxtConfig({
   // modules of the last layer first, so the content layer comes before the
   // ui layer: @nuxt/ui must be installed before @nuxt/content, or the plain
   // MDC prose components win over the Nuxt UI ones.
-  extends: ['@yuri4n/nuxt-base', '@yuri4n/nuxt-content', '@yuri4n/nuxt-ui'],
+  extends: [
+    '@yuri4n/nuxt-preferences',
+    '@yuri4n/nuxt-base',
+    '@yuri4n/nuxt-content',
+    '@yuri4n/nuxt-ui',
+  ],
   modules: ['@nuxt/eslint'],
+  i18n: {
+    locales: [
+      { code: 'en', file: 'en.json' },
+      { code: 'es', file: 'es.json' },
+      { code: 'pt-BR', file: 'pt-BR.json' },
+    ],
+  },
   css: ['~/assets/css/main.css'],
   site: { name: 'yuri4n.dev playground' },
   compatibilityDate: '2026-10-09',

@@ -1,0 +1,9 @@
+{
+  "preference": {
+    "language": "Idioma",
+    "appearance": "Apariencia",
+    "system": "Sistema",
+    "light": "Claro",
+    "dark": "Oscuro"
+  }
+}

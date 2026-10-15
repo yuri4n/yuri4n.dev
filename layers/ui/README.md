@@ -128,8 +128,10 @@ Tailwind's neutral gray (Nuxt UI's default is `slate`). Shade utilities such as
 - **reka-ui.** Do not add it directly. When a layer or an app needs it, pin it
   to the exact version that `@nuxt/ui` pins (2.10.5 for `@nuxt/ui` 4.11.3). A
   range installs a second copy with a second inject context.
-- **Dark mode.** Nuxt UI's color mode puts `.dark` on `<html>`. Use
-  `<UColorModeButton>` for the toggle.
+- **Dark mode.** Nuxt UI's color mode puts `.dark` on `<html>`. Extend
+  `@yuri4n/nuxt-preferences` and use `<AppPreferences>` for the shared
+  system/light/dark control and language selector. The system preference
+  follows operating-system changes until the user selects a fixed theme.
 
 ## Not in this layer (v0.1)
 

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { t } = useI18n()
 // Each class string is written out in full, so Tailwind finds it in this file.
 const swatches = [
   { name: 'background', classes: 'bg-background text-foreground' },
@@ -18,9 +19,11 @@ useSeoMeta({
 <template>
   <UContainer class="flex flex-col gap-8 py-10">
     <section class="flex flex-col gap-2">
-      <h1 class="font-heading text-2xl font-semibold">Token contract</h1>
+      <h1 class="font-heading text-2xl font-semibold">
+        {{ t('playground.title') }}
+      </h1>
       <p class="text-muted-foreground">
-        Neutral defaults of @yuri4n/nuxt-ui. An app sets its own values.
+        {{ t('playground.description') }}
       </p>
     </section>
 
@@ -39,8 +42,8 @@ useSeoMeta({
       <UButton label="Nuxt UI button" />
       <UButton label="Neutral" color="neutral" variant="outline" />
       <UIcon name="i-lucide-sun" class="size-6" />
-      <NuxtLink to="/docs" class="font-medium text-primary">
-        Content page
+      <NuxtLink :to="$localePath('/docs')" class="font-medium text-primary">
+        {{ t('playground.content') }}
       </NuxtLink>
     </div>
   </UContainer>

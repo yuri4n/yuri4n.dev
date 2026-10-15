@@ -1,0 +1,14 @@
+{
+  "name": "@yuri4n/nuxt-preferences",
+  "type": "module",
+  "version": "0.1.0",
+  "main": "./nuxt.config.ts",
+  "files": ["app", "i18n", "nuxt.config.ts", "shared"],
+  "dependencies": {
+    "@nuxtjs/color-mode": "^4.0.1",
+    "@nuxtjs/i18n": "^10.6.0"
+  },
+  "devDependencies": {
+    "nuxt": "^4.6.0"
+  }
+}
