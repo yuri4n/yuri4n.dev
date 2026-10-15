@@ -20,9 +20,9 @@ system, light and dark appearance. The app owns its content and skin.
      extends: ['@yuri4n/nuxt-preferences', '@yuri4n/nuxt-ui'],
      i18n: {
        locales: [
-         { code: 'en', file: 'en.json' },
-         { code: 'es', file: 'es.json' },
-         { code: 'pt-BR', file: 'pt-BR.json' },
+         { code: 'en', language: 'en', file: 'en.json' },
+         { code: 'es', language: 'es', file: 'es.json' },
+         { code: 'pt-BR', language: 'pt-BR', file: 'pt-BR.json' },
        ],
      },
    })
@@ -33,6 +33,10 @@ links so navigation keeps the selected language. Localized routes use no
 prefix for English, `/es` for Spanish and `/pt-BR` for Brazilian Portuguese.
 The layer updates `<html lang>` and `dir`. Each app owns its title,
 description, canonical URL and alternate-language metadata.
+Keep the `language` fields when declaring files in an app: Nuxt i18n does
+not preserve them when the app replaces locale entries without the fields.
+`useLocaleHead()` needs them to generate alternate-language links. An app
+that enables localized SEO also supplies its public `i18n.baseUrl`.
 
 At `/`, the first visit uses the browser's language when it is supported;
 otherwise it uses English. The `app-locale` cookie remembers the selection.
